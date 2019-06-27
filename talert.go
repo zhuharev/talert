@@ -5,10 +5,11 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 )
 
-const version = "0.0.1"
+const version = "0.0.3"
 
 type alerter struct {
 	token  string
@@ -99,5 +100,5 @@ func render(message string, fncs ...fieldFn) string {
 		f := fn()
 		result += fmt.Sprintf("**%s**: %s\n", f.Name, f.Value)
 	}
-	return result
+	return url.QueryEscape(result)
 }
