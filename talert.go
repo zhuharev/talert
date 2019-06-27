@@ -7,9 +7,10 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
-const version = "0.0.3"
+const version = "0.0.5"
 
 type alerter struct {
 	token  string
@@ -42,6 +43,18 @@ func (a *alerter) Alert(message string, fncs ...fieldFn) {
 }
 
 var defaultAlerter *alerter
+
+func ParseDSN(dsn string) (string, int, error) {
+	arr := strings.SplitN(dsn, "|", 2)
+	if len(arr) != 2 {
+		return "", 0, fmt.Errorf("bad dsn")
+	}
+	id, err := strconv.Atoi(arr[1])
+	if err != nil {
+		return "", 0, err
+	}
+	return arr[0], id, nil
+}
 
 func Init(token string, chatID int) error {
 	defaultAlerter = &alerter{
