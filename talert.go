@@ -2,6 +2,8 @@ package talert
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -23,9 +25,18 @@ func (a *alerter) Alert(message string, fncs ...fieldFn) {
 		a.token,
 		a.chatID,
 		render(message, fncs...))
-	_, err := http.Get(url)
+	resp, err := http.Get(url)
 	if err != nil {
-		_ = err
+		log.Println(err)
+		return
+	}
+	bts, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("read body: err=%s body=%s", err, bts)
+		return
+	}
+	if err != nil {
+		log.Printf("body: %s", bts)
 	}
 }
 
