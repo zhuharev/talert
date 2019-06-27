@@ -98,7 +98,7 @@ func render(message string, fncs ...fieldFn) string {
 			result += "\n\n"
 		}
 		f := fn()
-		result += fmt.Sprintf("**%s**: %s\n", f.Name, f.Value)
+		result += fmt.Sprintf("*%s*: %s\n", f.Name, f.Value)
 	}
 	return url.QueryEscape(result)
 }
