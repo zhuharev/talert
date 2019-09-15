@@ -10,16 +10,21 @@ import (
 	"strings"
 )
 
-const version = "0.0.5"
+const version = "0.0.6"
 
 type alerter struct {
 	token  string
 	chatID int
 }
 
-const (
+var (
 	endpoint = "https://api.telegram.org/bot"
 )
+
+// SetEndpoint changes default endpoint. It's useful if you use proxy for avoid censorship
+func SetEndpoint(e string) {
+	endpoint = e
+}
 
 func (a *alerter) Alert(message string, fncs ...fieldFn) {
 	url := fmt.Sprintf("%s%s/sendMessage?chat_id=%d&parse_mode=Markdown&text=%s",
