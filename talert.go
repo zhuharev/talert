@@ -8,13 +8,16 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 )
 
-const version = "0.0.6"
+const version = "0.0.7"
 
 type alerter struct {
 	token  string
 	chatID int
+
+	client *http.Client
 }
 
 var (
@@ -32,7 +35,7 @@ func (a *alerter) Alert(message string, fncs ...fieldFn) {
 		a.token,
 		a.chatID,
 		render(message, fncs...))
-	resp, err := http.Get(url)
+	resp, err := a.client.Get(url)
 	if err != nil {
 		log.Println(err)
 		return
@@ -65,6 +68,7 @@ func Init(token string, chatID int) error {
 	defaultAlerter = &alerter{
 		token:  token,
 		chatID: chatID,
+		client: &http.Client{Timeout: 10 * time.Second},
 	}
 	return nil
 }
@@ -96,6 +100,19 @@ func Int(k string, v int) fieldFn {
 		return field{
 			Name:  k,
 			Value: strconv.Itoa(v),
+		}
+	}
+}
+
+func Error(k string, err error) fieldFn {
+	var s string
+	if err != nil {
+		s = err.Error()
+	}
+	return func() field {
+		return field{
+			Name:  k,
+			Value: s,
 		}
 	}
 }
