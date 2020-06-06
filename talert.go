@@ -11,25 +11,54 @@ import (
 	"time"
 )
 
-const version = "0.0.7"
-
-type alerter struct {
-	token  string
-	chatID int
-
-	client *http.Client
-}
+const version = "0.1.0"
 
 var (
 	endpoint = "https://api.telegram.org/bot"
 )
+
+type alerter struct {
+	token  string
+	chatID int
+	ch     chan message
+
+	client *http.Client
+}
+
+func NewAlerter(token string, chatID int) *alerter {
+	a := &alerter{
+		token:  token,
+		chatID: chatID,
+		client: &http.Client{Timeout: 10 * time.Second},
+		ch:     make(chan message, 10),
+	}
+
+	go a.run()
+
+	return a
+}
+
+type message struct {
+	Text  string
+	Funcs []fieldFn
+}
+
+func (a *alerter) run() {
+	for msg := range a.ch {
+		a.AlertWait(msg.Text, msg.Funcs...)
+	}
+}
 
 // SetEndpoint changes default endpoint. It's useful if you use proxy for avoid censorship
 func SetEndpoint(e string) {
 	endpoint = e
 }
 
-func (a *alerter) Alert(message string, fncs ...fieldFn) {
+func (a *alerter) Alert(msg string, fncs ...fieldFn) {
+	a.ch <- message{Text: msg, Funcs: fncs}
+}
+
+func (a *alerter) AlertWait(message string, fncs ...fieldFn) {
 	url := fmt.Sprintf("%s%s/sendMessage?chat_id=%d&parse_mode=Markdown&text=%s",
 		endpoint,
 		a.token,
@@ -65,11 +94,7 @@ func ParseDSN(dsn string) (string, int, error) {
 }
 
 func Init(token string, chatID int) error {
-	defaultAlerter = &alerter{
-		token:  token,
-		chatID: chatID,
-		client: &http.Client{Timeout: 10 * time.Second},
-	}
+	defaultAlerter = NewAlerter(token, chatID)
 	return nil
 }
 
